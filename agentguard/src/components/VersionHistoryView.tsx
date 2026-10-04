@@ -7,29 +7,39 @@ import {
   RotateCcw,
   CheckCircle2,
   AlertTriangle,
-  Diff,
   FileCode,
-  ArrowRight,
   Clock,
   User,
+  PlusCircle,
 } from 'lucide-react';
 import { GitCommit as GitCommitType, FileDiff } from '@/lib/types';
 
 interface VersionHistoryViewProps {
   commits: GitCommitType[];
   currentCommit: GitCommitType | null;
+  uncommittedDiffs?: FileDiff[];
+  onCommitChanges?: (message: string) => Promise<boolean | { success: boolean; error?: string }>;
   onRollbackToCommit: (commitHash: string) => Promise<any>;
 }
 
 export const VersionHistoryView: React.FC<VersionHistoryViewProps> = ({
   commits,
   currentCommit,
+  uncommittedDiffs = [],
+  onCommitChanges,
   onRollbackToCommit,
 }) => {
   const [selectedCommit, setSelectedCommit] = useState<GitCommitType | null>(null);
   const [showRollbackModal, setShowRollbackModal] = useState<boolean>(false);
   const [targetCommit, setTargetCommit] = useState<GitCommitType | null>(null);
   const [isRestoring, setIsRestoring] = useState<boolean>(false);
+
+  const [commitMessage, setCommitMessage] = useState<string>('policy: update agent configuration');
+  const [isCommitting, setIsCommitting] = useState<boolean>(false);
+  const [commitError, setCommitError] = useState<string | null>(null);
+
+  const hasUncommittedChanges = uncommittedDiffs && uncommittedDiffs.length > 0;
+  const isCommitButtonDisabled = isCommitting || !commitMessage.trim() || !hasUncommittedChanges;
 
   const handleOpenRollbackModal = (commit: GitCommitType) => {
     setTargetCommit(commit);
@@ -49,6 +59,30 @@ export const VersionHistoryView: React.FC<VersionHistoryViewProps> = ({
     }
   };
 
+  const handleCommit = async () => {
+    if (isCommitButtonDisabled || !onCommitChanges) return;
+
+    setIsCommitting(true);
+    setCommitError(null);
+
+    try {
+      const res = await onCommitChanges(commitMessage.trim());
+      const ok = typeof res === 'boolean' ? res : res.success;
+      const errorMsg = typeof res === 'object' && res.error ? res.error : 'Commit failed. Please check working tree changes.';
+
+      if (ok) {
+        setCommitMessage('');
+      } else {
+        setCommitError(errorMsg);
+      }
+    } catch (e: any) {
+      console.error('Commit error:', e);
+      setCommitError(e.message || 'Failed to commit changes');
+    } finally {
+      setIsCommitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="flex items-center justify-between">
@@ -58,7 +92,7 @@ export const VersionHistoryView: React.FC<VersionHistoryViewProps> = ({
             <span>Git Version History & Safe Rollback</span>
           </h1>
           <p className="text-slate-400 text-xs mt-1">
-            Audit commit history, inspect version diffs, and restore earlier configurations safely.
+            Audit commit history, inspect version diffs, commit working tree changes, and restore earlier configurations safely.
           </p>
         </div>
       </div>
@@ -67,13 +101,18 @@ export const VersionHistoryView: React.FC<VersionHistoryViewProps> = ({
         {/* Commit Timeline Column */}
         <div className="lg:col-span-7 space-y-4">
           <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <h2 className="text-sm font-semibold text-slate-100 flex items-center space-x-2">
-              <GitCommit className="w-4 h-4 text-indigo-400" />
-              <span>Git Commit History Timeline</span>
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-100 flex items-center space-x-2">
+                <GitCommit className="w-4 h-4 text-indigo-400" />
+                <span>Git Commit History Timeline</span>
+              </h2>
+              <span className="text-xs font-mono text-slate-500">
+                {commits.length} commit{commits.length !== 1 ? 's' : ''} logged
+              </span>
+            </div>
 
             <div className="space-y-3 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-slate-800">
-              {commits.map((commit, idx) => {
+              {commits.map((commit) => {
                 const isCurrent = commit.hash === currentCommit?.hash;
 
                 return (
@@ -136,8 +175,104 @@ export const VersionHistoryView: React.FC<VersionHistoryViewProps> = ({
           </div>
         </div>
 
-        {/* Safety Rollback Protocol Card */}
-        <div className="lg:col-span-5 space-y-4">
+        {/* Right Column: Commit Changes & Safe Rollback Architecture */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* Commit Changes Card */}
+          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-100 flex items-center space-x-2">
+                <PlusCircle className="w-4 h-4 text-indigo-400" />
+                <span>Commit Changes</span>
+              </h2>
+              {hasUncommittedChanges ? (
+                <span className="bg-amber-950/80 text-amber-300 border border-amber-800/80 text-[11px] px-2.5 py-0.5 rounded-full font-mono font-semibold flex items-center space-x-1">
+                  <FileCode className="w-3 h-3 inline mr-1" />
+                  <span>{uncommittedDiffs.length} pending change{uncommittedDiffs.length > 1 ? 's' : ''}</span>
+                </span>
+              ) : (
+                <span className="bg-emerald-950/80 text-emerald-300 border border-emerald-800/80 text-[11px] px-2.5 py-0.5 rounded-full font-mono font-semibold flex items-center space-x-1">
+                  <CheckCircle2 className="w-3 h-3 inline mr-1" />
+                  <span>Working tree clean</span>
+                </span>
+              )}
+            </div>
+
+            {/* Changed Files Display */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-slate-300">Changed Files in Working Tree</label>
+              {hasUncommittedChanges ? (
+                <div className="bg-slate-950 border border-slate-800/90 rounded-xl p-3 space-y-2 max-h-48 overflow-y-auto">
+                  {uncommittedDiffs.map((diff) => (
+                    <div key={diff.path} className="flex items-center justify-between text-xs font-mono">
+                      <div className="flex items-center space-x-2 truncate">
+                        <FileCode className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <span className="text-slate-200 truncate">{diff.path}</span>
+                      </div>
+                      <span
+                        className={`text-[10px] uppercase px-1.5 py-0.5 rounded font-semibold shrink-0 ${
+                          diff.status === 'added'
+                            ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                            : diff.status === 'deleted'
+                            ? 'bg-rose-950 text-rose-400 border border-rose-800'
+                            : 'bg-amber-950 text-amber-400 border border-amber-800'
+                        }`}
+                      >
+                        {diff.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 text-center text-xs text-slate-500 space-y-1">
+                  <p className="text-slate-400 font-medium">No uncommitted changes</p>
+                  <p className="text-[11px] text-slate-600">Modify policy rules or agent files to commit updates to Git.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Commit Message Input */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-slate-300">Commit Message</label>
+              <input
+                type="text"
+                value={commitMessage}
+                onChange={(e) => {
+                  setCommitMessage(e.target.value);
+                  if (commitError) setCommitError(null);
+                }}
+                placeholder="Enter commit message (e.g. policy: adjust refund limit)..."
+                className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none font-mono transition"
+              />
+            </div>
+
+            {/* Commit Error Banner */}
+            {commitError && (
+              <div className="bg-rose-950/60 border border-rose-800/80 rounded-xl p-3 flex items-start space-x-2 text-rose-300 text-xs font-mono">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{commitError}</span>
+              </div>
+            )}
+
+            {/* Commit Button & Description */}
+            <div className="pt-1 space-y-2">
+              <button
+                onClick={handleCommit}
+                disabled={isCommitButtonDisabled}
+                className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20 transition active:scale-98"
+              >
+                <GitCommit className="w-4 h-4" />
+                <span>{isCommitting ? 'Committing Changes...' : 'Commit Changes'}</span>
+              </button>
+
+              {!hasUncommittedChanges && (
+                <p className="text-[11px] text-slate-500 text-center font-mono">
+                  Button disabled: No changes to commit in repository.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Safety Rollback Protocol Card */}
           <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
             <h2 className="text-sm font-semibold text-slate-100 flex items-center space-x-2">
               <RotateCcw className="w-4 h-4 text-amber-400" />

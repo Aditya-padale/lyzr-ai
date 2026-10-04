@@ -19,7 +19,7 @@ interface PolicyEditorViewProps {
   files: AgentFile[];
   uncommittedDiffs: FileDiff[];
   onSaveFile: (filePath: string, content: string) => Promise<void>;
-  onCommitChanges: (message: string) => Promise<boolean>;
+  onCommitChanges: (message: string) => Promise<boolean | { success: boolean; error?: string }>;
   onRunTestSuite: () => void;
 }
 
@@ -57,7 +57,8 @@ export const PolicyEditorView: React.FC<PolicyEditorViewProps> = ({
       if (isDirty) {
         await onSaveFile(activeTab, currentContent);
       }
-      const ok = await onCommitChanges(commitMessage);
+      const res = await onCommitChanges(commitMessage);
+      const ok = typeof res === 'boolean' ? res : res.success;
       if (ok) {
         setCommitMessage('');
       }

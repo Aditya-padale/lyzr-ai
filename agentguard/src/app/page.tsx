@@ -192,7 +192,7 @@ export default function AgentGuardApp() {
     return await res.json();
   };
 
-  const handleCommitChanges = async (message: string): Promise<boolean> => {
+  const handleCommitChanges = async (message: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/git/commits', {
         method: 'POST',
@@ -202,12 +202,13 @@ export default function AgentGuardApp() {
       const data = await res.json();
       if (data.success) {
         await refreshAll();
-        return true;
+        return { success: true };
       }
-    } catch (e) {
+      return { success: false, error: data.error || 'Commit failed' };
+    } catch (e: any) {
       console.error('Error committing:', e);
+      return { success: false, error: e.message || 'Failed to commit changes' };
     }
-    return false;
   };
 
   const handleCreateBranch = async (branchName: string): Promise<boolean> => {
@@ -468,6 +469,8 @@ export default function AgentGuardApp() {
             <VersionHistoryView
               commits={commits}
               currentCommit={currentCommit}
+              uncommittedDiffs={uncommittedDiffs}
+              onCommitChanges={handleCommitChanges}
               onRollbackToCommit={handleRollbackToCommit}
             />
           )}

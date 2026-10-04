@@ -29,10 +29,21 @@ export class GitService {
 
   private exec(command: string): string {
     try {
-      return execSync(command, { cwd: this.projectDir, encoding: 'utf-8' }).trim();
+      return execSync(command, { cwd: this.projectDir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
     } catch (err: any) {
-      console.error(`Git command failed: ${command}`, err.stderr || err.message);
-      return '';
+      const stderr = err.stderr ? err.stderr.toString().trim() : '';
+      const stdout = err.stdout ? err.stdout.toString().trim() : '';
+      const msg = stderr || stdout || err.message || `Git command failed: ${command}`;
+      console.error(`Git command failed: ${command}`, msg);
+      throw new Error(msg);
+    }
+  }
+
+  private safeExec(command: string, fallback: string = ''): string {
+    try {
+      return this.exec(command);
+    } catch {
+      return fallback;
     }
   }
 
@@ -41,7 +52,7 @@ export class GitService {
   }
 
   public getCommits(): GitCommit[] {
-    const output = this.exec('git log --pretty=format:"%H|%h|%an|%ad|%s" --date=iso');
+    const output = this.safeExec('git log --pretty=format:"%H|%h|%an|%ad|%s" --date=iso');
     if (!output) return [];
 
     const currentHash = this.getCurrentCommitHash();
@@ -60,20 +71,20 @@ export class GitService {
   }
 
   public getCurrentCommitHash(): string {
-    return this.exec('git rev-parse HEAD');
+    return this.safeExec('git rev-parse HEAD');
   }
 
   public getCurrentCommitShortHash(): string {
-    return this.exec('git rev-parse --short HEAD');
+    return this.safeExec('git rev-parse --short HEAD');
   }
 
   public getCurrentBranch(): string {
-    const branch = this.exec('git rev-parse --abbrev-ref HEAD');
+    const branch = this.safeExec('git rev-parse --abbrev-ref HEAD');
     return branch || 'main';
   }
 
   public getBranches(): GitBranch[] {
-    const output = this.exec('git branch --format="%(refname:short)|%(objectname)|%(objectname:short)|%(HEAD)"');
+    const output = this.safeExec('git branch --format="%(refname:short)|%(objectname)|%(objectname:short)|%(HEAD)"');
     if (!output) {
       const current = this.getCurrentBranch();
       const currentHash = this.getCurrentCommitHash();
@@ -124,9 +135,9 @@ export class GitService {
 
     try {
       // Check if uncommitted changes exist, stash them if needed
-      const status = this.exec('git status --porcelain');
+      const status = this.safeExec('git status --porcelain');
       if (status) {
-        this.exec('git stash push -m "AgentGuard auto-stash before checkout"');
+        this.safeExec('git stash push -m "AgentGuard auto-stash before checkout"');
       }
 
       this.exec(`git checkout "${safeName}"`);
@@ -138,8 +149,8 @@ export class GitService {
 
   public commit(message: string): { success: boolean; hash?: string; error?: string } {
     try {
-      this.exec('git add .');
-      const status = this.exec('git status --porcelain');
+      this.safeExec('git add .');
+      const status = this.safeExec('git status --porcelain');
       if (!status) {
         return { success: false, error: 'No changes to commit' };
       }
@@ -154,25 +165,23 @@ export class GitService {
   }
 
   public getUncommittedDiff(): FileDiff[] {
-    const output = this.exec('git diff HEAD');
-    const statusOutput = this.exec('git status --porcelain');
-
-    if (!output && !statusOutput) return [];
+    const statusOutput = this.safeExec('git status --porcelain');
+    if (!statusOutput) return [];
 
     const diffs: FileDiff[] = [];
     const statusLines = statusOutput.split('\n').filter(Boolean);
 
     for (const line of statusLines) {
       const statusCode = line.substring(0, 2).trim();
-      const filePath = line.substring(3).trim();
+      const filePath = line.substring(2).trim().replace(/^"(.*)"$/, '$1');
 
-      if (filePath.startsWith('.gitagent') || filePath.startsWith('workspace') || filePath.startsWith('node_modules')) continue;
+      if (!filePath || filePath.startsWith('.gitagent') || filePath.startsWith('workspace') || filePath.startsWith('node_modules')) continue;
 
       let status: 'modified' | 'added' | 'deleted' = 'modified';
       if (statusCode.includes('A') || statusCode.includes('?')) status = 'added';
       if (statusCode.includes('D')) status = 'deleted';
 
-      const fileDiffOutput = this.exec(`git diff HEAD -- "${filePath}"`);
+      const fileDiffOutput = this.safeExec(`git diff HEAD -- "${filePath}"`);
       diffs.push({
         path: filePath,
         status,
