@@ -99,6 +99,39 @@ function createCustomModel(provider: string, modelId: string, baseUrl: string): 
 	};
 }
 
+function createFallbackModel(provider: string, modelId: string): Model<any> {
+	let api: any = "openai-completions";
+	let baseUrl = "https://api.openai.com/v1";
+
+	if (provider === "google") {
+		api = "google-generative-ai";
+		baseUrl = "https://generativelanguage.googleapis.com/v1beta";
+	} else if (provider === "anthropic") {
+		api = "anthropic-messages";
+		baseUrl = "https://api.anthropic.com";
+	} else if (provider === "openai") {
+		api = "openai-completions";
+		baseUrl = "https://api.openai.com/v1";
+	} else if (provider === "groq") {
+		api = "openai-completions";
+		baseUrl = "https://api.groq.com/openai/v1";
+	}
+
+	return {
+		id: modelId,
+		name: `${modelId} (${provider})`,
+		api,
+		provider,
+		baseUrl,
+		reasoning: false,
+		input: ["text", "image"] as ("text" | "image")[],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 128000,
+		maxTokens: 8192,
+	};
+}
+
+
 async function ensureGitagentDir(agentDir: string): Promise<string> {
 	const gitagentDir = join(agentDir, ".gitagent");
 	await mkdir(gitagentDir, { recursive: true });
@@ -413,6 +446,9 @@ Do NOT track trivial single-command tasks (e.g. "what time is it"). But DO check
 	} else {
 		// Standard registered model
 		model = getModel(provider as any, modelId as any);
+		if (!model) {
+			model = createFallbackModel(provider, modelId);
+		}
 	}
 
 	// One run is many model requests: every turn of the agent loop, plus the
@@ -425,7 +461,7 @@ Do NOT track trivial single-command tasks (e.g. "what time is it"). But DO check
 	// the same process.
 	model = {
 		...model,
-		headers: { ...(model as any).headers, "X-Session-Id": sessionId },
+		headers: { ...((model as any)?.headers ?? {}), "X-Session-Id": sessionId },
 	};
 
 	// For custom providers not in pi-ai's env key map, ensure an API key is available.

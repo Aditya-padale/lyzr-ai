@@ -204,7 +204,7 @@ export async function preToolUse(ctx: any) {
 
     let loadedAgent: any = null;
     let systemPrompt = '';
-    let modelName = 'google:gemini-3.5-flash';
+    let modelName = 'google:gemini-2.0-flash';
 
     if (gitagentSdk && gitagentSdk.loadAgent) {
       try {
