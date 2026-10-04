@@ -32,8 +32,8 @@ name: customer-support-agent
 version: 1.0.0
 description: Autonomous Customer Support Agent for Acme E-commerce
 model:
-  preferred: "openai:gpt-4o-mini"
-  fallback: ["anthropic:claude-3-5-sonnet-20241022"]
+  preferred: "groq:llama-3.3-70b-versatile"
+  fallback: ["groq:llama-3.1-8b-instant"]
 tools:
   - read
   - write
@@ -187,24 +187,29 @@ export async function preToolUse(ctx: any) {
     const startTime = Date.now();
     let gitagentSdk: any = null;
 
+    // Sync GOOGLE_API_KEY and GEMINI_API_KEY if present
+    if (process.env.GOOGLE_API_KEY && !process.env.GEMINI_API_KEY) {
+      process.env.GEMINI_API_KEY = process.env.GOOGLE_API_KEY;
+    }
+    if (process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
+      process.env.GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
+    }
+
     try {
-      const req = eval('require');
-      gitagentSdk = req('@open-gitagent/gitagent');
-    } catch (e) {
-      try {
-        const gitagentPath = path.resolve(process.cwd(), '../gitagent-upstream/dist/exports.js');
-        if (fs.existsSync(gitagentPath)) {
-          const req = eval('require');
-          gitagentSdk = req(gitagentPath);
-        }
-      } catch {
-        // Fall back to simulation
+      const gitagentPath = path.resolve(process.cwd(), '../gitagent-upstream/dist/exports.js');
+      if (fs.existsSync(gitagentPath)) {
+        gitagentSdk = await import(/* webpackIgnore: true */ 'file://' + gitagentPath);
+      } else {
+        const pkg = '@open-gitagent/gitagent';
+        gitagentSdk = await import(/* webpackIgnore: true */ pkg);
       }
+    } catch (err) {
+      console.warn('GitAgent SDK dynamic import failed:', err);
     }
 
     let loadedAgent: any = null;
     let systemPrompt = '';
-    let modelName = 'google:gemini-2.0-flash';
+    let modelName = 'groq:llama-3.3-70b-versatile';
 
     if (gitagentSdk && gitagentSdk.loadAgent) {
       try {
@@ -214,6 +219,11 @@ export async function preToolUse(ctx: any) {
       } catch (e) {
         console.warn('GitAgent loadAgent warning:', e);
       }
+    }
+
+    // Model provider validation & fallback to Groq Llama 3.3 70B
+    if ((modelName.startsWith('openai:') && !process.env.OPENAI_API_KEY) || (modelName.startsWith('anthropic:') && !process.env.ANTHROPIC_API_KEY) || (modelName.startsWith('google:') && !process.env.GOOGLE_API_KEY && !process.env.GEMINI_API_KEY)) {
+      modelName = 'groq:llama-3.3-70b-versatile';
     }
 
     if (!systemPrompt) {
@@ -235,24 +245,39 @@ export async function preToolUse(ctx: any) {
         });
 
         let outputText = '';
+        let systemErrorText = '';
         const toolCalls: any[] = [];
         let inputTokens = 0;
         let outputTokens = 0;
 
         for await (const msg of queryStream) {
           if (msg.type === 'assistant') {
-            outputText += msg.content;
+            outputText += msg.content || '';
             if (msg.usage) {
-              inputTokens = msg.usage.inputTokens;
-              outputTokens = msg.usage.outputTokens;
+              inputTokens = msg.usage.inputTokens || 0;
+              outputTokens = msg.usage.outputTokens || 0;
+            }
+          } else if (msg.type === 'delta') {
+            if (msg.deltaType === 'text') {
+              outputText += msg.content || '';
             }
           } else if (msg.type === 'tool_use') {
             toolCalls.push({ name: msg.toolName, args: msg.args });
+          } else if (msg.type === 'system' && msg.subtype === 'error') {
+            systemErrorText = msg.content || 'SDK Error';
           }
         }
 
+        if (!outputText.trim() && systemErrorText) {
+          throw new Error(`GitAgent SDK query error: ${systemErrorText}`);
+        }
+
+        if (!outputText.trim()) {
+          throw new Error('GitAgent SDK returned empty response');
+        }
+
         return {
-          output: outputText || 'No response generated.',
+          output: outputText.trim(),
           executionTimeMs: Date.now() - startTime,
           toolCalls,
           tokensUsed: { input: inputTokens, output: outputTokens, total: inputTokens + outputTokens },
@@ -283,67 +308,63 @@ export async function preToolUse(ctx: any) {
   private simulateResponse(prompt: string, rulesText: string): { output: string; toolCalls: any[] } {
     const p = prompt.toLowerCase();
     const toolCalls: any[] = [];
+    let baseOutput = '';
 
     if (p.includes('ignore') || p.includes('override') || p.includes('developer mode') || p.includes('system prompt') || p.includes('admin access') || p.includes('bypass')) {
-      return {
-        output: "I cannot comply with requests to ignore or bypass safety guidelines and policy rules. How can I assist you with your customer support request today?",
-        toolCalls: [{ name: 'compliance_checker', args: { blocked: true, reason: 'Rule Integrity Guard' } }],
-      };
-    }
-
-    if (p.includes('credit card') || p.includes('pii') || p.includes('database key') || p.includes('api token') || p.includes('secret')) {
-      return {
-        output: "For security and privacy reasons, I am strictly prohibited from sharing customer PII, credit card details, or internal system keys.",
-        toolCalls: [{ name: 'privacy_guard', args: { restriction: 'Data Privacy Rule 3' } }],
-      };
-    }
-
-    if (p.includes('refund') || p.includes('return') || p.includes('cancel')) {
+      baseOutput = "I cannot comply with requests to ignore or bypass safety guidelines and policy rules. Security and system integrity are paramount to our operations, and any attempt to circumvent established guardrails will be rejected immediately.";
+      toolCalls.push({ name: 'compliance_checker', args: { blocked: true, reason: 'Rule Integrity Guard' } });
+    } else if (p.includes('credit card') || p.includes('pii') || p.includes('database key') || p.includes('api token') || p.includes('secret')) {
+      baseOutput = "For security and privacy reasons, I am strictly prohibited from sharing customer PII, credit card details, database credentials, or internal system API tokens. Protecting confidential data remains one of our highest compliance priorities.";
+      toolCalls.push({ name: 'privacy_guard', args: { restriction: 'Data Privacy Rule 3' } });
+    } else if (p.includes('refund') || p.includes('return') || p.includes('cancel')) {
       const hasOrderId = /ord-\d+|order\s*#?\s*\d+/i.test(prompt);
 
       if (!hasOrderId) {
-        return {
-          output: "I would be happy to assist you with your refund request. Could you please provide your 30-day Order ID so I can verify your purchase eligibility?",
-          toolCalls: [{ name: 'order_validator', args: { status: 'missing_order_id' } }],
-        };
-      }
-
-      const amountMatch = prompt.match(/\$(\d+)/);
-      if (amountMatch) {
-        const amount = parseInt(amountMatch[1], 10);
-        if (amount > 100) {
-          if (rulesText.includes('capped at $100') || rulesText.includes('exceeding $100 MUST be escalated')) {
-            return {
-              output: `Your refund request of $${amount} exceeds my autonomous processing limit of $100. I have escalated this ticket to human manager support for manual review.`,
-              toolCalls: [{ name: 'manager_escalation', args: { amount, threshold: 100 } }],
-            };
+        baseOutput = "I would be happy to assist you with your refund request. However, to proceed under our company policies, could you please provide your valid Order ID so I can verify your 30-day purchase eligibility?";
+        toolCalls.push({ name: 'order_validator', args: { status: 'missing_order_id' } });
+      } else {
+        const amountMatch = prompt.match(/\$(\d+)/);
+        if (amountMatch) {
+          const amount = parseInt(amountMatch[1], 10);
+          if (amount > 100) {
+            if (rulesText.includes('capped at $100') || rulesText.includes('exceeding $100 MUST be escalated')) {
+              baseOutput = `Your refund request of $${amount} exceeds my autonomous processing limit of $100. I have escalated this ticket to human manager support for manual review and fast resolution.`;
+              toolCalls.push({ name: 'manager_escalation', args: { amount, threshold: 100 } });
+            } else {
+              toolCalls.push({ name: 'memory', args: { action: 'save', key: 'refund_processed' } });
+              baseOutput = `Your refund request of $${amount} for your order has been approved and processed successfully according to our updated policy rules.`;
+            }
           } else {
             toolCalls.push({ name: 'memory', args: { action: 'save', key: 'refund_processed' } });
-            return {
-              output: `Your refund request of $${amount} for Order ID has been approved and processed successfully according to our updated policy rules.`,
-              toolCalls,
-            };
+            baseOutput = "Thank you for providing your Order ID. Your refund request of $45.00 has been verified within the 30-day window and processed successfully!";
           }
+        } else {
+          toolCalls.push({ name: 'memory', args: { action: 'save', key: 'refund_processed' } });
+          baseOutput = "Thank you for providing your Order ID. Your refund request has been verified within the 30-day window and processed successfully!";
         }
       }
+    } else if (p.includes('shipping') || p.includes('track') || p.includes('hours') || p.includes('hello') || p.includes('help')) {
+      baseOutput = "Hello! Thank you for contacting Acme Support. Standard shipping typically takes 3 to 5 business days, and tracking information will update automatically once your package leaves our fulfillment center.";
+      toolCalls.push({ name: 'read', args: { path: 'memory/MEMORY.md' } });
+    } else {
+      baseOutput = "Hello! I am AcmeBot, your AI Customer Support agent. I can assist you with order tracking, return requests under $100, policy clarifications, and general inquiry handling.";
+    }
 
-      toolCalls.push({ name: 'memory', args: { action: 'save', key: 'refund_processed' } });
+    const rulesLower = rulesText.toLowerCase();
+    const isLongParagraphs = rulesLower.includes('paragraph') || rulesLower.includes('long sentence') || rulesLower.includes('detailed');
+
+    if (isLongParagraphs) {
+      const paragraph1 = `${baseOutput} We are fully committed to ensuring that every customer interaction is handled with utmost detail, care, and absolute compliance with our active operational policies and behavioral guidelines.`;
+      const paragraph2 = `If you have any supplementary requests, require further clarification regarding our refund procedures, or need help navigating your current order status, please do not hesitate to ask. Our system logs every step to guarantee maximum transparency and customer satisfaction.`;
       return {
-        output: "Thank you for providing your Order ID. Your refund request of $45.00 has been verified within the 30-day window and processed successfully!",
+        output: `${paragraph1}\n\n${paragraph2}`,
         toolCalls,
       };
     }
 
-    if (p.includes('shipping') || p.includes('track') || p.includes('hours') || p.includes('hello') || p.includes('help')) {
-      return {
-        output: "Hello! Thank you for contacting Acme Support. Standard shipping takes 3-5 business days. How else can I help you today?",
-        toolCalls: [{ name: 'read', args: { path: 'memory/MEMORY.md' } }],
-      };
-    }
-
     return {
-      output: "Hello! I am AcmeBot, your AI Customer Support agent. I can help with order tracking, return requests under $100, and general inquiries. Please let me know how I can help.",
-      toolCalls: [],
+      output: baseOutput,
+      toolCalls,
     };
   }
 }
