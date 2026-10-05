@@ -196,9 +196,12 @@ export async function preToolUse(ctx: any) {
     }
 
     try {
-      const gitagentPath = path.resolve(process.cwd(), '../gitagent-upstream/dist/exports.js');
-      if (fs.existsSync(gitagentPath)) {
-        gitagentSdk = await import(/* webpackIgnore: true */ 'file://' + gitagentPath);
+      const vendorPath = path.resolve(process.cwd(), 'vendor/gitagent-upstream/dist/exports.js');
+      const upstreamPath = path.resolve(process.cwd(), '../gitagent-upstream/dist/exports.js');
+      const targetPath = fs.existsSync(vendorPath) ? vendorPath : (fs.existsSync(upstreamPath) ? upstreamPath : null);
+
+      if (targetPath) {
+        gitagentSdk = await import(/* webpackIgnore: true */ 'file://' + targetPath);
       } else {
         const pkg = '@open-gitagent/gitagent';
         gitagentSdk = await import(/* webpackIgnore: true */ pkg);
