@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
+import { getProjectDir } from '@/lib/project-config';
 import { GitAgentService } from '@/lib/gitagent-service';
-
-const PROJECT_DIR = path.join(process.cwd(), 'projects', 'customer-support');
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +11,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    const gitAgentService = new GitAgentService(PROJECT_DIR);
+    const projectDir = getProjectDir();
+    const gitAgentService = new GitAgentService(projectDir);
     const result = await gitAgentService.runAgent(prompt);
 
     return NextResponse.json(result);

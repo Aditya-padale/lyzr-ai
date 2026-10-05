@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
+import { getProjectDir } from '@/lib/project-config';
 import { GitService } from '@/lib/git-service';
 import { AuditService } from '@/lib/audit-service';
 
-const PROJECT_DIR = path.join(process.cwd(), 'projects', 'customer-support');
-
 export async function GET() {
   try {
-    const gitService = new GitService(PROJECT_DIR);
+    const projectDir = getProjectDir();
+    const gitService = new GitService(projectDir);
     const branches = gitService.getBranches();
     const currentBranch = gitService.getCurrentBranch();
-    return NextResponse.json({ branches, currentBranch });
+    return NextResponse.json({ branches, currentBranch, repoDir: projectDir });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch branches' }, { status: 500 });
   }
@@ -25,8 +24,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'branchName is required' }, { status: 400 });
     }
 
-    const gitService = new GitService(PROJECT_DIR);
-    const auditService = new AuditService(PROJECT_DIR);
+    const projectDir = getProjectDir();
+    const gitService = new GitService(projectDir);
+    const auditService = new AuditService(projectDir);
 
     if (action === 'create') {
       const res = gitService.createBranch(branchName);

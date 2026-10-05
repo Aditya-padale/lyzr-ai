@@ -118,11 +118,11 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center space-x-2">
-            <GitPullRequest className="w-5 h-5 text-indigo-400" />
+          <h1 className="text-xl font-bold text-slate-900 flex items-center space-x-2">
+            <GitPullRequest className="w-5 h-5 text-indigo-600" />
             <span>Pull Requests & Branch Review Workflows</span>
           </h1>
-          <p className="text-slate-400 text-xs mt-1">
+          <p className="text-slate-500 text-xs mt-1">
             Isolate policy experiments on feature branches, run evaluations, open PRs, and merge with explicit approval.
           </p>
         </div>
@@ -130,15 +130,15 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setShowCreateBranchModal(true)}
-            className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition"
+            className="flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-2xs transition"
           >
-            <GitBranch className="w-4 h-4 text-indigo-400" />
+            <GitBranch className="w-4 h-4 text-indigo-600" />
             <span>New Feature Branch</span>
           </button>
 
           <button
             onClick={handleOpenPRModal}
-            className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20 transition active:scale-95"
+            className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-2xs transition active:scale-98"
           >
             <Plus className="w-4 h-4" />
             <span>Open Pull Request</span>
@@ -147,31 +147,31 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
       </div>
 
       {/* GitHub Integration Status Bar */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+      <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
         <div className="flex items-center space-x-3">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-slate-300 font-semibold">Active Git Branch:</span>
-          <span className="bg-indigo-950 text-indigo-300 border border-indigo-800 px-2.5 py-1 rounded-lg font-bold">
+          <span className="text-slate-700 font-semibold">Active Git Branch:</span>
+          <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-lg font-bold">
             {currentBranch}
           </span>
           {uncommittedDiffs.length > 0 && (
-            <span className="bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded text-[11px] font-sans">
+            <span className="bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[11px] font-sans font-medium">
               {uncommittedDiffs.length} Uncommitted Edits
             </span>
           )}
         </div>
 
-        <div className="flex items-center space-x-4 text-slate-400">
+        <div className="flex items-center space-x-4 text-slate-500">
           <div className="flex items-center space-x-1.5">
-            <span className="text-slate-500">GitHub Remote:</span>
+            <span className="text-slate-400">GitHub Remote:</span>
             {githubConfig.isConnected ? (
-              <span className="text-emerald-400 font-bold flex items-center space-x-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
+              <span className="text-emerald-700 font-bold flex items-center space-x-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Connected ({githubConfig.repo})</span>
               </span>
             ) : (
-              <span className="text-amber-400 font-bold flex items-center space-x-1" title="Configure GITHUB_TOKEN in env for live GitHub sync">
-                <AlertCircle className="w-3.5 h-3.5" />
+              <span className="text-amber-800 font-bold flex items-center space-x-1" title="Configure GITHUB_TOKEN in env for live GitHub sync">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
                 <span>Local Git Mode</span>
               </span>
             )}
@@ -180,9 +180,9 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
       </div>
 
       {/* Branch Switcher Grid */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-3">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center space-x-2">
-          <GitBranch className="w-4 h-4 text-indigo-400" />
+      <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-5 space-y-3">
+        <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-2">
+          <GitBranch className="w-4 h-4 text-indigo-600" />
           <span>Active Repository Branches</span>
         </h2>
 
@@ -193,13 +193,13 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
               onClick={() => onCheckoutBranch(b.name)}
               className={`flex items-center space-x-2.5 px-3.5 py-2 rounded-xl text-xs font-mono transition ${
                 b.name === currentBranch
-                  ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/50 font-bold shadow'
-                  : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-300 font-bold shadow-2xs'
+                  : 'bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 hover:border-slate-300'
               }`}
             >
-              <GitBranch className={`w-3.5 h-3.5 ${b.name === currentBranch ? 'text-indigo-400' : 'text-slate-500'}`} />
+              <GitBranch className={`w-3.5 h-3.5 ${b.name === currentBranch ? 'text-indigo-600' : 'text-slate-400'}`} />
               <span>{b.name}</span>
-              {b.isDefault && <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-sans">main</span>}
+              {b.isDefault && <span className="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-sans font-medium">main</span>}
             </button>
           ))}
         </div>
@@ -207,20 +207,20 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
 
       {/* Pull Requests List */}
       <div className="space-y-4">
-        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
           Open & Historic Pull Requests ({pullRequests.length})
         </div>
 
         {pullRequests.length === 0 ? (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center space-y-3">
-            <GitPullRequest className="w-10 h-10 text-slate-600 mx-auto" />
-            <h3 className="text-sm font-semibold text-slate-200">No Pull Requests Created Yet</h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
+          <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-12 text-center space-y-3">
+            <GitPullRequest className="w-10 h-10 text-slate-400 mx-auto" />
+            <h3 className="text-sm font-semibold text-slate-800">No Pull Requests Created Yet</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
               Create an experimental feature branch, modify agent rules, run evaluation tests, and open your first pull request for human review.
             </p>
             <button
               onClick={handleOpenPRModal}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-2xs transition"
             >
               Open Proposed PR
             </button>
@@ -233,8 +233,8 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
             return (
               <div
                 key={pr.id}
-                className={`bg-slate-900/60 border rounded-2xl transition duration-150 overflow-hidden ${
-                  isOpen ? 'border-indigo-500/40 shadow-xl' : 'border-slate-800/80 opacity-90'
+                className={`bg-white border rounded-2xl transition duration-150 overflow-hidden ${
+                  isOpen ? 'border-indigo-300 shadow-sm' : 'border-slate-200 opacity-90'
                 }`}
               >
                 {/* PR Header */}
@@ -244,29 +244,29 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
                 >
                   <div className="space-y-1.5 flex-1 min-w-[280px]">
                     <div className="flex items-center space-x-3">
-                      <span className="font-mono text-xs text-indigo-400 font-bold">#{pr.number || 1}</span>
-                      <span className="text-sm font-semibold text-slate-100">{pr.title}</span>
+                      <span className="font-mono text-xs text-indigo-600 font-bold">#{pr.number || 1}</span>
+                      <span className="text-sm font-semibold text-slate-900">{pr.title}</span>
                       <span
                         className={`text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full border uppercase ${
                           pr.status === 'merged'
-                            ? 'bg-purple-950 text-purple-300 border-purple-800'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
                             : pr.status === 'open'
-                            ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
-                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
                         }`}
                       >
                         {pr.status}
                       </span>
 
                       {pr.isGitHubPR && (
-                        <span className="bg-slate-800 text-slate-300 border border-slate-700 text-[10px] px-2 py-0.5 rounded font-mono flex items-center space-x-1">
-                          <ExternalLink className="w-3 h-3 text-indigo-400" />
+                        <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] px-2 py-0.5 rounded font-mono flex items-center space-x-1">
+                          <ExternalLink className="w-3 h-3 text-indigo-600" />
                           <span>GitHub PR</span>
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center space-x-3 text-xs text-slate-400 font-mono">
+                    <div className="flex items-center space-x-3 text-xs text-slate-500 font-mono">
                       <span>
                         {pr.sourceBranch} → {pr.targetBranch}
                       </span>
@@ -283,7 +283,7 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
                           handleExecuteMergePR(pr.id);
                         }}
                         disabled={isMerging === pr.id}
-                        className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition"
+                        className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-2xs transition"
                       >
                         {isMerging === pr.id ? (
                           <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -300,7 +300,7 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
                         target="_blank"
                         rel="noreferrer"
                         onClick={e => e.stopPropagation()}
-                        className="flex items-center space-x-1 text-xs text-indigo-400 hover:underline font-mono"
+                        className="flex items-center space-x-1 text-xs text-indigo-600 hover:underline font-mono font-medium"
                       >
                         <span>View on GitHub</span>
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -311,30 +311,30 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
 
                 {/* PR Detail Drawer */}
                 {isExpanded && (
-                  <div className="border-t border-slate-800 bg-slate-950/80 p-6 space-y-5">
+                  <div className="border-t border-slate-200 bg-slate-50/70 p-6 space-y-5">
                     <div className="space-y-2">
-                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                         Pull Request Description & Rationale
                       </div>
-                      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed">
+                      <div className="bg-white border border-slate-200 rounded-xl p-4 text-xs font-mono text-slate-800 whitespace-pre-wrap leading-relaxed shadow-2xs">
                         {pr.description}
                       </div>
                     </div>
 
                     {/* Test Evidence Banner */}
                     {pr.testRun && (
-                      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2">
+                      <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2 shadow-2xs">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="font-semibold text-slate-200 flex items-center space-x-2">
-                            <TestTube2 className="w-4 h-4 text-indigo-400" />
+                          <span className="font-semibold text-slate-900 flex items-center space-x-2">
+                            <TestTube2 className="w-4 h-4 text-indigo-600" />
                             <span>Automated Test Suite Evidence</span>
                           </span>
-                          <span className="font-mono text-emerald-400 font-bold">
+                          <span className="font-mono text-emerald-700 font-bold">
                             {pr.testRun.passRate}% Pass Rate ({pr.testRun.passed}/{pr.testRun.totalTests} Passed)
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-400">
-                          Executed against commit <code className="text-indigo-300 font-mono">{pr.testRun.commitHash.slice(0, 7)}</code> on branch <code className="text-slate-300 font-mono">{pr.sourceBranch}</code>.
+                        <p className="text-[11px] text-slate-500">
+                          Executed against commit <code className="text-indigo-700 font-mono font-semibold">{pr.testRun.commitHash.slice(0, 7)}</code> on branch <code className="text-slate-800 font-mono font-semibold">{pr.sourceBranch}</code>.
                         </p>
                       </div>
                     )}
@@ -342,12 +342,12 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
                     {/* Changed Files */}
                     {pr.changedFiles && pr.changedFiles.length > 0 && (
                       <div className="space-y-2">
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                           Files Modified in this PR ({pr.changedFiles.length})
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {pr.changedFiles.map((file, idx) => (
-                            <span key={idx} className="bg-slate-900 border border-slate-800 text-indigo-300 px-3 py-1.5 rounded-lg text-xs font-mono">
+                            <span key={idx} className="bg-white border border-slate-200 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-mono font-medium shadow-2xs">
                               {file}
                             </span>
                           ))}
@@ -364,20 +364,20 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
 
       {/* New Feature Branch Modal */}
       {showCreateBranchModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
-            <div className="flex items-center space-x-3 text-indigo-400">
-              <div className="p-2.5 bg-indigo-950 rounded-xl border border-indigo-800">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
+            <div className="flex items-center space-x-3 text-indigo-600">
+              <div className="p-2.5 bg-indigo-50 rounded-xl border border-indigo-200">
                 <GitBranch className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-100">Create Experimental Branch</h3>
-                <p className="text-xs text-slate-400">Isolate policy edits from main production branch.</p>
+                <h3 className="text-base font-bold text-slate-900">Create Experimental Branch</h3>
+                <p className="text-xs text-slate-500">Isolate policy edits from main production branch.</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
                 Branch Name
               </label>
               <input
@@ -385,21 +385,21 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
                 value={newBranchName}
                 onChange={e => setNewBranchName(e.target.value)}
                 placeholder="e.g. feature/stricter-refund-limit"
-                className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none font-mono"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-900 outline-none font-mono"
               />
             </div>
 
             <div className="flex items-center justify-end space-x-3 pt-2">
               <button
                 onClick={() => setShowCreateBranchModal(false)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateBranch}
                 disabled={isSubmitting || !newBranchName.trim()}
-                className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition"
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-2xs transition"
               >
                 {isSubmitting ? 'Creating...' : 'Create & Checkout'}
               </button>
@@ -410,28 +410,28 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
 
       {/* Open PR Modal */}
       {showCreatePRModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full space-y-5 shadow-2xl">
-            <div className="flex items-center space-x-3 text-indigo-400">
-              <div className="p-2.5 bg-indigo-950 rounded-xl border border-indigo-800">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-lg w-full space-y-5 shadow-2xl">
+            <div className="flex items-center space-x-3 text-indigo-600">
+              <div className="p-2.5 bg-indigo-50 rounded-xl border border-indigo-200">
                 <GitPullRequest className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-100">Prepare Pull Request</h3>
-                <p className="text-xs text-slate-400">Submit proposed agent updates for review & merge.</p>
+                <h3 className="text-base font-bold text-slate-900">Prepare Pull Request</h3>
+                <p className="text-xs text-slate-500">Submit proposed agent updates for review & merge.</p>
               </div>
             </div>
 
             <div className="space-y-4 text-xs font-mono">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
                     Source Branch
                   </label>
                   <select
                     value={prSourceBranch}
                     onChange={e => setPrSourceBranch(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none"
                   >
                     {branches.map(b => (
                       <option key={b.name} value={b.name}>
@@ -441,38 +441,38 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
                     Target Branch
                   </label>
                   <input
                     type="text"
                     value={prTargetBranch}
                     onChange={e => setPrTargetBranch(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
                   PR Title
                 </label>
                 <input
                   type="text"
                   value={prTitle}
                   onChange={e => setPrTitle(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-slate-200 outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-slate-900 outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
                   Change Description & Evaluation Summary
                 </label>
                 <textarea
                   value={prDescription}
                   onChange={e => setPrDescription(e.target.value)}
-                  className="w-full h-32 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl p-3 text-xs text-slate-200 outline-none resize-none leading-relaxed"
+                  className="w-full h-32 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl p-3 text-xs text-slate-900 outline-none resize-none leading-relaxed"
                 />
               </div>
             </div>
@@ -480,14 +480,14 @@ export const PullRequestsView: React.FC<PullRequestsViewProps> = ({
             <div className="flex items-center justify-end space-x-3 pt-2">
               <button
                 onClick={() => setShowCreatePRModal(false)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleExecuteCreatePR}
                 disabled={isSubmitting || !prTitle.trim()}
-                className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition"
+                className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-2xs transition"
               >
                 {isSubmitting ? 'Submitting PR...' : 'Submit Pull Request'}
               </button>

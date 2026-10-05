@@ -1,4 +1,4 @@
-import { execSync, execFileSync } from 'child_process';
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { GitCommit, GitBranch, FileDiff } from './types';
@@ -7,8 +7,12 @@ export class GitService {
   private projectDir: string;
 
   constructor(projectDir: string) {
-    this.projectDir = projectDir;
+    this.projectDir = path.resolve(projectDir);
     this.ensureRepoInitialized();
+  }
+
+  public getRepoDir(): string {
+    return this.projectDir;
   }
 
   private ensureRepoInitialized(): void {
@@ -34,7 +38,7 @@ export class GitService {
       const stderr = err.stderr ? err.stderr.toString().trim() : '';
       const stdout = err.stdout ? err.stdout.toString().trim() : '';
       const msg = stderr || stdout || err.message || `Git command failed: ${command}`;
-      console.error(`Git command failed: ${command}`, msg);
+      console.error(`Git command failed in [${this.projectDir}]: ${command}`, msg);
       throw new Error(msg);
     }
   }
@@ -134,7 +138,6 @@ export class GitService {
     if (!safeName) return { success: false, error: 'Invalid branch name' };
 
     try {
-      // Check if uncommitted changes exist, stash them if needed
       const status = this.safeExec('git status --porcelain');
       if (status) {
         this.safeExec('git stash push -m "AgentGuard auto-stash before checkout"');
@@ -147,20 +150,35 @@ export class GitService {
     }
   }
 
-  public commit(message: string): { success: boolean; hash?: string; error?: string } {
+  public commit(message: string): { success: boolean; hash?: string; error?: string; repoDir?: string } {
     try {
+      const statusBefore = this.safeExec('git status --porcelain');
+      if (!statusBefore.trim()) {
+        return {
+          success: false,
+          error: `No changes to commit in repository: ${this.projectDir}`,
+          repoDir: this.projectDir,
+        };
+      }
+
+      // Stage working tree changes in agent repo
       this.safeExec('git add .');
-      const status = this.safeExec('git status --porcelain');
-      if (!status) {
-        return { success: false, error: 'No changes to commit' };
+
+      const statusAfterAdd = this.safeExec('git status --porcelain');
+      if (!statusAfterAdd.trim()) {
+        return {
+          success: false,
+          error: `No changes to commit in repository: ${this.projectDir}`,
+          repoDir: this.projectDir,
+        };
       }
 
       const sanitizedMsg = message.replace(/"/g, '\\"');
       this.exec(`git commit -m "${sanitizedMsg}"`);
       const newHash = this.getCurrentCommitHash();
-      return { success: true, hash: newHash };
+      return { success: true, hash: newHash, repoDir: this.projectDir };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Commit failed' };
+      return { success: false, error: err.message || 'Commit failed', repoDir: this.projectDir };
     }
   }
 
@@ -172,10 +190,12 @@ export class GitService {
     const statusLines = statusOutput.split('\n').filter(Boolean);
 
     for (const line of statusLines) {
-      const statusCode = line.substring(0, 2).trim();
+      const statusCode = line.substring(0, 2);
       const filePath = line.substring(2).trim().replace(/^"(.*)"$/, '$1');
 
-      if (!filePath || filePath.startsWith('.gitagent') || filePath.startsWith('workspace') || filePath.startsWith('node_modules')) continue;
+      if (!filePath || filePath.startsWith('node_modules') || filePath.startsWith('.next') || filePath.startsWith('workspace/')) {
+        continue;
+      }
 
       let status: 'modified' | 'added' | 'deleted' = 'modified';
       if (statusCode.includes('A') || statusCode.includes('?')) status = 'added';
@@ -204,7 +224,9 @@ export class GitService {
       const statusCode = parts[0];
       const filePath = parts[1];
 
-      if (!filePath || filePath.startsWith('.gitagent') || filePath.startsWith('workspace') || filePath.startsWith('node_modules')) continue;
+      if (!filePath || filePath.startsWith('node_modules') || filePath.startsWith('.next') || filePath.startsWith('workspace/')) {
+        continue;
+      }
 
       let status: 'modified' | 'added' | 'deleted' = 'modified';
       if (statusCode.startsWith('A')) status = 'added';
@@ -232,10 +254,8 @@ export class GitService {
     const safeTarget = this.sanitizeBranchName(targetBranch);
 
     try {
-      // Checkout target branch
       this.checkoutBranch(safeTarget);
-      // Execute git merge
-      const output = this.exec(`git merge "${safeSource}" --no-ff -m "Merge branch '${safeSource}' into ${safeTarget}"`);
+      this.exec(`git merge "${safeSource}" --no-ff -m "Merge branch '${safeSource}' into ${safeTarget}"`);
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message || `Failed to merge ${safeSource} into ${safeTarget}` };

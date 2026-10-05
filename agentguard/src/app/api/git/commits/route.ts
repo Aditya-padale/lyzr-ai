@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
+import { getProjectDir } from '@/lib/project-config';
 import { GitService } from '@/lib/git-service';
-
-const PROJECT_DIR = path.join(process.cwd(), 'projects', 'customer-support');
 
 export async function GET() {
   try {
-    const gitService = new GitService(PROJECT_DIR);
+    const projectDir = getProjectDir();
+    const gitService = new GitService(projectDir);
     const commits = gitService.getCommits();
-    return NextResponse.json({ commits });
+    return NextResponse.json({ commits, repoDir: projectDir });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch commits' }, { status: 500 });
   }
@@ -23,11 +22,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Commit message is required' }, { status: 400 });
     }
 
-    const gitService = new GitService(PROJECT_DIR);
-    const result = gitService.commit(message);
+    const projectDir = getProjectDir();
+    const gitService = new GitService(projectDir);
+    const result = gitService.commit(message.trim());
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error || 'Commit failed' }, { status: 400 });
+      return NextResponse.json({
+        error: result.error || `No changes to commit in repository: ${projectDir}`,
+        repoDir: projectDir,
+      }, { status: 400 });
     }
 
     const commits = gitService.getCommits();
@@ -35,6 +38,7 @@ export async function POST(req: NextRequest) {
       success: true,
       hash: result.hash,
       commits,
+      repoDir: projectDir,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Commit failed' }, { status: 500 });

@@ -1,31 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
+import { getProjectDir } from '@/lib/project-config';
 import { EvaluationService } from '@/lib/eval-service';
-
-const PROJECT_DIR = path.join(process.cwd(), 'projects', 'customer-support');
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { scenarioId } = body;
+    const { branchName, scenarioId } = body;
 
-    const evalService = new EvaluationService(PROJECT_DIR);
+    const projectDir = getProjectDir();
+    const evalService = new EvaluationService(projectDir);
 
     if (scenarioId) {
       const scenarios = evalService.getScenarios();
-      const scenario = scenarios.find(s => s.id === scenarioId);
-      if (!scenario) {
-        return NextResponse.json({ error: `Scenario ${scenarioId} not found` }, { status: 404 });
+      const targetScenario = scenarios.find(s => s.id === scenarioId);
+      if (!targetScenario) {
+        return NextResponse.json({ error: 'Scenario not found' }, { status: 404 });
       }
-
-      const execution = await evalService.runSingleScenario(scenario);
-      return NextResponse.json({ execution });
+      const execution = await evalService.runSingleScenario(targetScenario);
+      return NextResponse.json({ success: true, execution, repoDir: projectDir });
     }
 
-    // Run full test suite
-    const testRun = await evalService.runTestSuite();
-    return NextResponse.json({ testRun });
+    const testRun = await evalService.runTestSuite(branchName);
+    return NextResponse.json({ success: true, testRun, repoDir: projectDir });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Evaluation failed' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Evaluation run failed' }, { status: 500 });
   }
 }

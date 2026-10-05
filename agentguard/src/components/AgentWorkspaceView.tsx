@@ -113,38 +113,38 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center space-x-2">
-            <FileCode className="w-5 h-5 text-indigo-400" />
+          <h1 className="text-xl font-bold text-slate-900 flex items-center space-x-2">
+            <FileCode className="w-5 h-5 text-indigo-600" />
             <span>Agent Workspace & File Inspector</span>
           </h1>
-          <p className="text-slate-400 text-xs mt-1">
+          <p className="text-slate-500 text-xs mt-1">
             Inspect & edit GitAgent instruction files, skill definitions, MCP configs, and system prompts.
           </p>
         </div>
 
         <button
           onClick={() => setShowNewFileModal(true)}
-          className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition"
+          className="flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-2xs transition"
         >
-          <Plus className="w-4 h-4 text-indigo-400" />
+          <Plus className="w-4 h-4 text-indigo-600" />
           <span>New Policy File</span>
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[620px]">
         {/* File Navigation Panel */}
-        <div className="lg:col-span-3 bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-3 bg-white border border-slate-200 shadow-xs rounded-2xl p-4 flex flex-col justify-between space-y-4">
           <div className="space-y-3">
             {/* Category Filter */}
-            <div className="flex flex-wrap gap-1 border-b border-slate-800 pb-2">
+            <div className="flex flex-wrap gap-1 border-b border-slate-200 pb-2">
               {categories.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
                   className={`px-2 py-1 rounded text-[11px] font-medium transition ${
                     activeCategory === cat.id
-                      ? 'bg-indigo-600/30 text-indigo-300 font-bold'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-200'
+                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                   }`}
                 >
                   {cat.label}
@@ -164,17 +164,17 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
                     onClick={() => setSelectedFile(file.path)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-mono transition ${
                       isCurrent
-                        ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40'
-                        : 'text-slate-300 hover:bg-slate-800/60 border border-transparent'
+                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold shadow-2xs'
+                        : 'text-slate-700 hover:bg-slate-50 border border-transparent'
                     }`}
                   >
                     <div className="flex items-center space-x-2 truncate">
-                      <FileCode className="w-4 h-4 text-indigo-400 shrink-0" />
+                      <FileCode className={`w-4 h-4 shrink-0 ${isCurrent ? 'text-indigo-600' : 'text-slate-400'}`} />
                       <span className="truncate">{file.path}</span>
                     </div>
 
                     {fileIsModified && (
-                      <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" title="Unsaved changes" />
+                      <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Unsaved changes" />
                     )}
                   </button>
                 );
@@ -182,26 +182,26 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-[11px] text-slate-400 space-y-1">
-            <div className="font-semibold text-slate-300">GitAgent Conventions</div>
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-600 space-y-1">
+            <div className="font-semibold text-slate-800">GitAgent Conventions</div>
             <p className="text-slate-500 leading-relaxed">
-              <strong className="text-slate-400">RULES.md</strong>: Safety policies<br />
-              <strong className="text-slate-400">SOUL.md</strong>: Agent persona<br />
-              <strong className="text-slate-400">skills/</strong>: Executable skills
+              <strong className="text-slate-700">RULES.md</strong>: Safety policies<br />
+              <strong className="text-slate-700">SOUL.md</strong>: Agent persona<br />
+              <strong className="text-slate-700">skills/</strong>: Executable skills
             </p>
           </div>
         </div>
 
         {/* File Editor */}
         <div className="lg:col-span-9 space-y-4 flex flex-col">
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl flex-1 flex flex-col overflow-hidden">
+          <div className="bg-white border border-slate-200 shadow-xs rounded-2xl flex-1 flex flex-col overflow-hidden">
             {/* Editor Header */}
-            <div className="bg-slate-950/80 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center space-x-2 font-mono text-xs text-slate-200">
-                <span className="text-indigo-400">editing:</span>
-                <span className="font-bold">{selectedFile}</span>
+            <div className="bg-slate-50/80 border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-2 font-mono text-xs text-slate-700">
+                <span className="text-indigo-600 font-medium">editing:</span>
+                <span className="font-bold text-slate-900">{selectedFile}</span>
                 {isModified && (
-                  <span className="bg-amber-950 text-amber-300 border border-amber-800 text-[10px] px-2 py-0.5 rounded font-sans">
+                  <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] px-2 py-0.5 rounded font-sans font-medium">
                     Unsaved Draft
                   </span>
                 )}
@@ -210,11 +210,11 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
               <button
                 onClick={handleSave}
                 disabled={!isModified || isSaving}
-                className="flex items-center space-x-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-md transition"
+                className="flex items-center space-x-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-2xs transition"
               >
                 {savedStatus[selectedFile] ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-300" />
+                    <Check className="w-3.5 h-3.5 text-emerald-200" />
                     <span>Saved!</span>
                   </>
                 ) : (
@@ -227,24 +227,24 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
             </div>
 
             {/* Code Textarea Editor */}
-            <div className="p-4 flex-1 bg-slate-950/90 font-mono text-xs text-slate-200 min-h-[350px]">
+            <div className="p-4 flex-1 bg-slate-950 font-mono text-xs text-slate-100 min-h-[350px]">
               <textarea
                 value={activeContent}
                 onChange={e => handleContentChange(e.target.value)}
-                className="w-full h-full min-h-[340px] bg-transparent resize-none outline-none font-mono leading-relaxed text-slate-200 selection:bg-indigo-500/30"
+                className="w-full h-full min-h-[340px] bg-transparent resize-none outline-none font-mono leading-relaxed text-slate-100 selection:bg-indigo-500/30"
                 spellCheck={false}
               />
             </div>
           </div>
 
           {/* Interactive Agent Terminal */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-slate-100 flex items-center space-x-2">
-                <Terminal className="w-4 h-4 text-indigo-400" />
+              <h2 className="text-sm font-semibold text-slate-900 flex items-center space-x-2">
+                <Terminal className="w-4 h-4 text-indigo-600" />
                 <span>Live Agent Terminal Execution</span>
               </h2>
-              <span className="text-xs text-slate-400 font-mono">GitAgent v2.2 SDK</span>
+              <span className="text-xs text-slate-500 font-mono">GitAgent v2.2 SDK</span>
             </div>
 
             <div className="flex items-center space-x-3">
@@ -253,12 +253,12 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
                 value={testPrompt}
                 onChange={e => setTestPrompt(e.target.value)}
                 placeholder="Ask the active agent a prompt..."
-                className="flex-1 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none font-mono"
+                className="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-slate-900 outline-none font-mono"
               />
               <button
                 onClick={handleRunAgentPrompt}
                 disabled={isExecuting}
-                className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-md transition"
+                className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-2xs transition"
               >
                 {isExecuting ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -273,7 +273,7 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
 
             {/* Execution Result Box */}
             {executionResult && (
-              <div className="bg-slate-950 border border-slate-800/90 rounded-xl p-4 space-y-3 text-xs font-mono">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3 text-xs font-mono text-slate-100 shadow-inner">
                 <div className="flex items-center justify-between text-slate-400 text-[11px]">
                   <span className="text-indigo-400 font-bold">Execution Output:</span>
                   <div className="flex items-center space-x-3">
@@ -283,7 +283,7 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
                   </div>
                 </div>
 
-                <div className="text-slate-200 bg-slate-900/60 p-3 rounded-lg border border-slate-800 leading-relaxed whitespace-pre-wrap">
+                <div className="text-slate-100 bg-slate-950 p-3 rounded-lg border border-slate-800 leading-relaxed whitespace-pre-wrap">
                   {executionResult.output}
                 </div>
 
@@ -292,7 +292,7 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
                     <span className="text-slate-400 text-[11px]">Tool Calls Executed:</span>
                     <div className="flex flex-wrap gap-2">
                       {executionResult.toolCalls.map((t: any, idx: number) => (
-                        <span key={idx} className="bg-slate-900 border border-slate-800 text-purple-300 px-2 py-1 rounded text-[11px]">
+                        <span key={idx} className="bg-slate-800 border border-slate-700 text-purple-300 px-2 py-1 rounded text-[11px]">
                           {t.name}({JSON.stringify(t.args)})
                         </span>
                       ))}
@@ -307,12 +307,12 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
 
       {/* New File Modal */}
       {showNewFileModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-slate-100">Create New Policy File</h3>
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900">Create New Policy File</h3>
             <div className="space-y-3 font-mono text-xs">
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
                   File Path (e.g. skills/refund-check/SKILL.md or KNOWLEDGE.md)
                 </label>
                 <input
@@ -320,19 +320,19 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
                   value={newFilePath}
                   onChange={e => setNewFilePath(e.target.value)}
                   placeholder="skills/new-skill/SKILL.md"
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-slate-200 outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-slate-900 outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
                   Initial Content
                 </label>
                 <textarea
                   value={newFileContent}
                   onChange={e => setNewFileContent(e.target.value)}
                   placeholder="# File content..."
-                  className="w-full h-32 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl p-3 text-xs text-slate-200 outline-none resize-none"
+                  className="w-full h-32 bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl p-3 text-xs text-slate-900 outline-none resize-none"
                 />
               </div>
             </div>
@@ -340,14 +340,14 @@ export const AgentWorkspaceView: React.FC<AgentWorkspaceViewProps> = ({
             <div className="flex items-center justify-end space-x-3 pt-2">
               <button
                 onClick={() => setShowNewFileModal(false)}
-                className="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateNewFile}
                 disabled={!newFilePath.trim()}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-semibold"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-2xs transition"
               >
                 Create File
               </button>

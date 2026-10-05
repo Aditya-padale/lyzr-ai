@@ -49,6 +49,7 @@ export default function AgentGuardApp() {
   const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([]);
   const [compliance, setCompliance] = useState<ComplianceStatus | null>(null);
   const [lifecycleStage, setLifecycleStage] = useState<string>('active_version');
+  const [repoDir, setRepoDir] = useState<string>('');
 
   // Loading States
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -67,7 +68,8 @@ export default function AgentGuardApp() {
       setCurrentBranch(data.currentBranch || 'main');
       setBranches(data.branches || []);
       setLatestTestRun(data.latestTestRun);
-      setUncommittedDiffs(Array(data.uncommittedDiffCount).fill({ path: 'modified', status: 'modified', diffText: '' }));
+      setUncommittedDiffs(data.uncommittedDiffs || []);
+      setRepoDir(data.projectDir || '');
       setLatestRegressions(data.latestRegressions || []);
       setCommits(data.recentCommits || []);
       setPullRequests(data.pullRequests || []);
@@ -364,15 +366,15 @@ export default function AgentGuardApp() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center space-x-3">
-        <div className="w-6 h-6 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        <span className="text-sm font-medium font-mono text-slate-400">Initializing GitAgent Workbench...</span>
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center space-x-3">
+        <div className="w-6 h-6 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <span className="text-sm font-medium font-mono text-slate-500">Initializing GitAgent Workbench...</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500/20">
       <Navbar
         agentName={agentName}
         version={version}
@@ -470,6 +472,7 @@ export default function AgentGuardApp() {
               commits={commits}
               currentCommit={currentCommit}
               uncommittedDiffs={uncommittedDiffs}
+              repoDir={repoDir}
               onCommitChanges={handleCommitChanges}
               onRollbackToCommit={handleRollbackToCommit}
             />

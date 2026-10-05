@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
+import { getProjectDir } from '@/lib/project-config';
 import { GitService } from '@/lib/git-service';
 import { EvaluationService } from '@/lib/eval-service';
-
-const PROJECT_DIR = path.join(process.cwd(), 'projects', 'customer-support');
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +12,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'targetCommitHash is required' }, { status: 400 });
     }
 
-    const gitService = new GitService(PROJECT_DIR);
+    const projectDir = getProjectDir();
+    const gitService = new GitService(projectDir);
     const restoreResult = gitService.restoreToCommit(targetCommitHash);
 
     if (!restoreResult.success) {
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     let newTestRun = null;
     if (rerunTests) {
-      const evalService = new EvaluationService(PROJECT_DIR);
+      const evalService = new EvaluationService(projectDir);
       newTestRun = await evalService.runTestSuite();
     }
 
@@ -35,6 +34,7 @@ export async function POST(req: NextRequest) {
       newCommitHash: restoreResult.newCommitHash,
       commits,
       testRun: newTestRun,
+      repoDir: projectDir,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Rollback failed' }, { status: 500 });
